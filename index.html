@@ -63,7 +63,7 @@ h1 { font-size: 34px; line-height: 1; margin: 6px 0 4px; font-weight: 700; lette
   background: var(--surface); border-radius: 14px; padding: 16px;
   border: 1px solid var(--line);
 }
-label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 5px; }
+label, .lbl { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 5px; }
 label:first-child { margin-top: 0; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; min-width: 0; }
@@ -79,6 +79,13 @@ input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-v
   flex: 0 0 auto; font: 600 14px "Barlow", sans-serif; color: var(--blue);
   background: transparent; border: 1px solid var(--blue); border-radius: 9px; padding: 0 12px;
 }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.seg label { flex: 1; margin: 0; position: relative; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; text-align: center; padding: 10px; background: var(--paper); color: var(--muted); font-size: 16px; }
+.seg input:checked + span { background: var(--blue); color: #fff; }
+.seg input:focus-visible + span { outline: 3px solid var(--yellow); outline-offset: -3px; }
+.veh-title { font: 700 19px "Barlow Condensed", sans-serif; margin: 0 0 4px; }
 .budget-wrap { display: flex; align-items: center; gap: 12px; }
 .budget-wrap input[type=range] { flex: 1; accent-color: var(--red); }
 .budget-val { font: 700 26px/1 "Barlow Condensed", sans-serif; min-width: 74px; text-align: right; }
@@ -183,6 +190,16 @@ ol.steps .det { color: var(--muted); font-size: 14px; }
     <label for="to">Arrivée</label>
     <input type="text" id="to" placeholder="Ville ou adresse" autocomplete="off">
 
+    <div class="lbl" id="vehLbl">Véhicule</div>
+    <div class="seg" role="radiogroup" aria-labelledby="vehLbl">
+      <label><input type="radio" name="veh" value="voiture" checked><span>Voiture</span></label>
+      <label><input type="radio" name="veh" value="moto"><span>Moto</span></label>
+    </div>
+
+    <label for="tollPrice">Péage du trajet tout autoroute (€)</label>
+    <input type="text" id="tollPrice" inputmode="decimal" placeholder="Relevé sur Waze ou ViaMichelin" autocomplete="off">
+    <div class="hint">Prix de l’itinéraire le plus rapide. L’appli en déduit le vrai tarif au km et le garde en mémoire pour ce trajet.</div>
+
     <label for="budget">Détour max accepté</label>
     <div class="budget-wrap">
       <input type="range" id="budget" min="0" max="60" step="1" value="10">
@@ -209,6 +226,7 @@ ol.steps .det { color: var(--muted); font-size: 14px; }
       <input type="password" id="key" placeholder="Colle ta clé ici" autocomplete="off">
       <div class="hint">Gardée uniquement sur ce téléphone.</div>
 
+      <p class="veh-title" id="vehTitle">Pour la voiture</p>
       <div class="row">
         <div>
           <label for="fuelType">Carburant</label>
@@ -223,21 +241,22 @@ ol.steps .det { color: var(--muted); font-size: 14px; }
         </div>
         <div>
           <label for="conso">Conso (L/100)</label>
-          <input type="number" id="conso" inputmode="decimal" step="0.1" value="6.5">
+          <input type="text" id="conso" inputmode="decimal" value="6.5" autocomplete="off">
         </div>
       </div>
       <div class="row">
         <div>
           <label for="tank">Réservoir (L)</label>
-          <input type="number" id="tank" inputmode="decimal" step="1" value="45">
+          <input type="text" id="tank" inputmode="decimal" value="45" autocomplete="off">
         </div>
         <div>
-          <label for="rate">Péage (€/km)</label>
-          <input type="number" id="rate" inputmode="decimal" step="0.01" value="0.11">
+          <label for="rate">Péage par défaut (€/km)</label>
+          <input type="text" id="rate" inputmode="decimal" value="0.11" autocomplete="off">
         </div>
       </div>
+      <div class="hint">Le péage par défaut sert seulement si tu n’indiques pas le prix du trajet.</div>
       <label for="fuelDefault">Prix carburant si inconnu (€/L)</label>
-      <input type="number" id="fuelDefault" inputmode="decimal" step="0.01" value="1.80">
+      <input type="text" id="fuelDefault" inputmode="decimal" value="1.80" autocomplete="off">
       <button type="button" class="small-btn" id="clearCache">Vider le cache des trajets</button>
     </div>
   </details>
@@ -423,6 +442,8 @@ async function compute(inp, api, progress) {
   progress(0.06, "Itinéraire le plus rapide…");
   const main = await api.route([orig, dest], false, true);
   const n = main.coords.length;
+  inp.rateCalibrated = inp.tollPrice > 0 && main.tollKm >= 1;
+  if (inp.rateCalibrated) inp.rate = inp.tollPrice / main.tollKm;
 
   let options = [], labels = new Map(), juncCount = 0;
   if (main.tollKm >= CFG.minToll) {
@@ -714,13 +735,45 @@ if (typeof document !== "undefined") {
     get(k, d) { try { const v = localStorage.getItem("pop:" + k); return v === null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem("pop:" + k, v); } catch (e) {} }
   };
-  const fields = ["from", "to", "budget", "gauge", "key", "fuelType", "conso", "tank", "rate", "fuelDefault"];
+  const num = v => parseFloat(String(v).replace(/\s/g, "").replace(",", "."));
+  const DEF = {
+    voiture: { fuelType: "gazole", conso: "6.5", tank: "45", rate: "0.11", gauge: "25" },
+    moto: { fuelType: "e10", conso: "5", tank: "15", rate: "0.07", gauge: "50" }
+  };
+  const fields = ["from", "to", "budget", "key", "fuelDefault"];
+  const vehFields = ["fuelType", "conso", "tank", "rate", "gauge"];
+  const veh = () => (document.querySelector('input[name="veh"]:checked') || {}).value || "voiture";
+  const norm = t => t.trim().toLowerCase().replace(/\s+/g, " ");
+  const tollKey = () => `toll:${veh()}:${norm($("from").value)}|${norm($("to").value)}`;
+
   for (const f of fields) {
     const el = $(f), v = store.get(f, null);
     if (v !== null) el.value = v;
-    el.addEventListener("change", () => store.set(f, el.value));
-    el.addEventListener("input", () => store.set(f, el.value));
+    const save = () => store.set(f, el.value);
+    el.addEventListener("change", save); el.addEventListener("input", save);
   }
+  function loadVeh() {
+    const v = veh();
+    for (const f of vehFields) {
+      const legacy = v === "voiture" ? store.get(f, DEF.voiture[f]) : DEF.moto[f];
+      $(f).value = store.get(`${v}:${f}`, legacy);
+    }
+    $("vehTitle").textContent = v === "moto" ? "Pour la moto" : "Pour la voiture";
+    loadToll(); syncUi();
+  }
+  function loadToll() { $("tollPrice").value = store.get(tollKey(), ""); }
+  for (const f of vehFields) {
+    const save = () => store.set(`${veh()}:${f}`, $(f).value);
+    $(f).addEventListener("change", save); $(f).addEventListener("input", save);
+  }
+  const savedVeh = store.get("veh", "voiture");
+  for (const r of document.querySelectorAll('input[name="veh"]')) {
+    r.checked = r.value === savedVeh;
+    r.addEventListener("change", () => { store.set("veh", veh()); loadVeh(); });
+  }
+  $("tollPrice").addEventListener("input", () => store.set(tollKey(), $("tollPrice").value));
+  $("from").addEventListener("change", loadToll);
+  $("to").addEventListener("change", loadToll);
   $("wantFuel").checked = store.get("wantFuel", "1") === "1";
   $("wantFuel").addEventListener("change", () => { store.set("wantFuel", $("wantFuel").checked ? "1" : "0"); syncUi(); });
   if (!$("key").value) $("settings").open = true;
@@ -734,11 +787,11 @@ if (typeof document !== "undefined") {
     $("budgetVal").textContent = `${$("budget").value} min`;
     $("gaugeVal").textContent = `${$("gauge").value} %`;
     $("fuelBox").style.display = "block";
-    const L = $("gauge").value / 100 * +$("tank").value, km = L / +$("conso").value * 100;
+    const L = $("gauge").value / 100 * num($("tank").value), km = L / num($("conso").value) * 100;
     $("autonomyHint").textContent = isFinite(km) ? `Soit environ ${Math.round(L)} L et ${Math.round(km)} km d’autonomie.` : "";
   }
   ["budget", "gauge", "tank", "conso"].forEach(f => $(f).addEventListener("input", syncUi));
-  syncUi();
+  loadVeh();
 
   $("posBtn").addEventListener("click", () => {
     if (!navigator.geolocation) return;
@@ -759,14 +812,16 @@ if (typeof document !== "undefined") {
   $("goBtn").addEventListener("click", async () => {
     const key = $("key").value.trim();
     for (const f of fields) store.set(f, $(f).value);
+    for (const f of vehFields) store.set(`${veh()}:${f}`, $(f).value);
+    if ($("tollPrice").value.trim()) store.set(tollKey(), $("tollPrice").value);
     showMsg("");
     if (!key) { $("settings").open = true; showMsg("Colle d’abord ta clé OpenRouteService dans les réglages."); return; }
     if (!$("from").value.trim() || !$("to").value.trim()) { showMsg("Renseigne le départ et l’arrivée."); return; }
     const inp = {
       from: $("from").value.trim(), to: $("to").value.trim(), budget: +$("budget").value,
       wantFuel: $("wantFuel").checked, gauge: +$("gauge").value, fuelType: $("fuelType").value,
-      conso: +$("conso").value || 6.5, tank: +$("tank").value || 45, rate: +$("rate").value || 0.11,
-      fuelDefault: +$("fuelDefault").value || 1.8
+      conso: num($("conso").value) || 6.5, tank: num($("tank").value) || 45, rate: num($("rate").value) || 0.11,
+      fuelDefault: num($("fuelDefault").value) || 1.8, tollPrice: num($("tollPrice").value) || 0, vehicle: veh()
     };
     $("goBtn").disabled = true; $("result").style.display = "none"; $("progress").style.display = "block";
     try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
@@ -786,7 +841,7 @@ if (typeof document !== "undefined") {
     const { main, best, inp } = res;
     const asm = assemble(res);
     const detourS = best.chosen.reduce((s, o) => s + o.deltaS, 0) + (best.station ? best.station.detS : 0);
-    const tollBase = main.tollKm * inp.rate;
+    const tollBase = inp.rateCalibrated ? inp.tollPrice : main.tollKm * inp.rate;
     const tollSaved = best.chosen.reduce((s, o) => s + o.tollEur, 0);
     const fuelDetours = best.chosen.reduce((s, o) => s + o.fuelEur, 0);
     const total = tollSaved - fuelDetours + (best.station ? best.fuelGain : 0);
@@ -806,6 +861,11 @@ if (typeof document !== "undefined") {
       <div class="fig"><b>${eur(tollBase - tollSaved)}</b><span>de péage (au lieu de ${eur(tollBase)})</span></div>
       <div class="fig"><b>${Math.round(asm.totalKm)} km</b><span>au lieu de ${Math.round(main.distanceKm)} km</span></div>
     </div>`;
+
+    const r3 = x => x.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    h += inp.rateCalibrated
+      ? `<p class="hint">${inp.vehicle === "moto" ? "Moto" : "Voiture"} · tarif calé sur ton prix : ${r3(inp.rate)} €/km (${eur2(inp.tollPrice)} pour ${Math.round(main.tollKm)} km à péage).</p>`
+      : `<p class="hint">Péage estimé à ${r3(inp.rate)} €/km. Indique le prix du trajet tout autoroute pour un calcul plus juste.</p>`;
 
     // étapes
     const steps = [];
