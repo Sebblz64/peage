@@ -284,6 +284,87 @@ const ORS_INTERVAL = 1600;      // ms entre deux appels (quota gratuit 40/min)
 const ALT_SPEED = 75, ALT_FACTOR = 1.3;
 const CFG = { spacing: 15, minGap: 3, maxSpan: 220, minToll: 5, margin: 15 * 60, snap: 3000, maxCalls: 250 };
 
+/* ============================================================ grilles de péage officielles */
+const TOLLS = {"source":"ASF tarifs au 1er février 2026, classe 1","c1":[{"id":"A64","st":[{"n":"Mousserolles","r":"1"},{"n":"Mouguerre Bourg","r":"1.1"},{"n":"Mouguerre Elizaberry","r":"2"},{"n":"Briscous","r":"3"},{"n":"Urt","r":"4"},{"n":"Guiche","r":"5"},{"n":"Péage de Sames","r":""},{"n":"Peyrehorade","r":"6"},{"n":"Salies","r":"7"},{"n":"Orthez","r":"8"},{"n":"Artix","r":"9"},{"n":"Lescar","r":"9.1"},{"n":"Pau centre","r":"10"},{"n":"Soumoulou","r":"11"},{"n":"Tarbes ouest","r":"12"},{"n":"Tarbes est","r":"13"},{"n":"Tournay","r":"14"},{"n":"Capvern","r":"15"},{"n":"Lannemezan","r":"16"},{"n":"Montréjeau","r":"17"},{"n":"Saint-Gaudens","r":"18"},{"n":"Lestelle-de-Saint-Martory","r":"19"},{"n":"Péage de Lestelle","r":""},{"n":"Saint-Martory","r":"20"},{"n":"Boussens","r":"21"},{"n":"Martres-Tolosane","r":"22"}],"m":[[0.0],[0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[1.3,1.3,1.3,1.3,1.3],[null,null,null,null,null,null],[2.6,2.6,2.6,2.6,2.6,null,2.6],[4.1,4.1,4.1,4.1,4.1,null,4.1,1.6],[5.7,5.7,5.7,5.7,5.7,null,5.7,3.6,1.3],[7.7,7.7,7.7,7.7,7.7,null,7.7,5.2,2.8,1.7],[9.3,9.3,9.3,9.3,9.3,null,9.3,7.2,4.4,3.5,1.1],[9.7,9.7,9.7,9.7,9.7,null,9.7,7.3,4.8,3.7,1.8,0.4],[10.4,10.4,10.4,10.4,10.4,null,10.4,8.0,5.5,4.4,2.4,1.6,1.2],[14.1,14.1,14.1,14.1,14.1,null,14.1,11.5,8.6,7.7,5.0,4.3,3.1,2.0],[14.4,14.4,14.4,14.4,14.4,null,14.4,11.6,8.9,8.0,5.4,4.6,3.8,2.7,0.6],[15.3,15.3,15.3,15.3,15.3,null,15.3,11.8,9.5,8.6,6.3,5.0,4.2,3.1,1.1,0.0],[15.6,15.6,15.6,15.6,15.6,null,15.6,12.6,10.1,9.2,6.9,5.4,4.8,3.7,1.5,0.0,0.0],[15.9,15.9,15.9,15.9,15.9,null,15.9,12.9,10.5,9.6,7.5,6.0,5.5,4.4,2.2,1.1,0.7,0.4],[17.5,17.5,17.5,17.5,17.5,null,17.5,14.5,12.3,11.4,9.2,8.6,7.3,6.2,4.0,3.6,2.8,2.2,1.7],[19.6,19.6,19.6,19.6,19.6,null,19.6,16.6,13.9,13.0,11.1,9.6,8.5,7.4,4.8,4.5,3.7,3.4,2.8,1.4],[22.4,22.4,22.4,22.4,22.4,null,22.4,20.4,17.2,16.3,13.9,13.5,12.0,10.9,8.6,8.1,6.9,6.4,5.9,4.3,2.1],[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],[22.4,22.4,22.4,22.4,22.4,null,22.4,20.4,17.2,16.3,13.9,13.5,12.0,10.9,8.6,8.1,6.9,6.4,5.9,4.3,2.1,null,1.5],[22.4,22.4,22.4,22.4,22.4,null,22.4,20.4,17.2,16.3,13.9,13.5,12.0,10.9,8.6,8.1,6.9,6.4,5.9,4.3,2.1,null,1.5,0.0],[22.4,22.4,22.4,22.4,22.4,null,22.4,20.4,17.2,16.3,13.9,13.5,12.0,10.9,8.6,8.1,6.9,6.4,5.9,4.3,2.1,null,1.5,0.0,0.0]]},{"id":"A63","st":[{"n":"Biriatou","r":"1"},{"n":"Péage de Biriatou","r":""},{"n":"Saint-Jean-de-Luz sud","r":"2"},{"n":"Saint-Jean-de-Luz nord","r":"3"},{"n":"Biarritz (demi-échangeur sud)","r":"4"},{"n":"Péage de la Négresse","r":""},{"n":"Biarritz (demi-échangeur nord)","r":"4"},{"n":"Bayonne sud","r":"5"},{"n":"Bayonne Mousserolles","r":"5.1"},{"n":"Bayonne nord","r":"6"},{"n":"Ondres","r":"7"},{"n":"Capbreton (demi-échangeur sud)","r":"8"},{"n":"Péage de Bénesse-Maremne","r":""},{"n":"Capbreton (demi-échangeur nord)","r":"8"},{"n":"Saint-Geours-de-Maremne","r":"9"}],"m":[[2.0],[2.0,2.0],[2.0,2.0,0.7],[3.2,3.2,1.9,1.2],[4.8,4.8,3.5,2.8,null],[null,null,null,null,null,null],[4.8,4.8,3.5,2.8,null,2.8,1.2],[4.8,4.8,3.5,2.8,null,2.8,1.2,0.8],[4.8,4.8,3.5,2.8,null,2.8,1.2,0.8,0.0],[5.8,5.8,4.5,3.8,null,3.8,2.2,1.8,1.0,1.0],[6.8,6.8,5.5,4.8,null,4.8,3.2,2.8,2.0,2.0,2.0],[9.1,9.1,7.8,7.1,null,7.1,5.5,5.0,4.3,4.3,4.3,null],[null,null,null,null,null,null,null,null,null,null,null,null,null],[9.1,9.1,7.8,7.1,null,7.1,5.5,5.0,4.3,4.3,4.3,null,4.3,2.0]]},{"id":"A61-A66-A9","st":[{"n":"Vendargues","r":"28"},{"n":"Montpellier est","r":"29"},{"n":"Montpellier sud","r":"30"},{"n":"Montpellier ouest","r":"31"},{"n":"Saint-Jean-de-Védas","r":"32"},{"n":"Péage de Montpellier St-Jean","r":""},{"n":"Sète","r":"33"},{"n":"Agde Pézenas","r":"34"},{"n":"Péage de Béziers-Cabrials","r":""},{"n":"Béziers ouest","r":"36"},{"n":"Narbonne est","r":"37"},{"n":"Narbonne sud","r":"38"},{"n":"Sigean","r":"39"},{"n":"Leucate","r":"40"},{"n":"Perpignan nord","r":"41"},{"n":"Perpignan sud","r":"42"},{"n":"Le Boulou (système fermé)","r":"43"},{"n":"Péage du Perthus","r":""},{"n":"Le Boulou (système ouvert)","r":""},{"n":"Frontière Espagnole","r":""},{"n":"Lézignan","r":"25"},{"n":"Carcassonne est","r":"24"},{"n":"Carcassonne ouest","r":"23"},{"n":"Bram","r":"22"},{"n":"Castelnaudary","r":"21"},{"n":"Villefranche-de-Lauragais","r":"20"},{"n":"Nailloux","r":"1"},{"n":"Mazères-Saverdun","r":"2"},{"n":"Péage de Pamiers","r":""},{"n":"Pamiers nord","r":"3"},{"n":"Pamiers sud","r":"4"},{"n":"Montgiscard","r":"19.1"},{"n":"Péage de Toulouse sud/ouest","r":""},{"n":"Le Palays","r":"19"},{"n":"Péage de Toulouse sud/est","r":""},{"n":"Montaudran","r":"18"},{"n":"Lasbordes","r":"17"},{"n":"Soupetard","r":"16"},{"n":"La Roseraie","r":"15"},{"n":"La Croix Daurade","r":"14"},{"n":"Borderouge","r":"13"},{"n":"Les Izards","r":"12"},{"n":"Sesquières","r":"33"}],"m":[[0.0],[0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[null,null,null,null,null],[1.7,1.7,1.7,1.7,1.7,1.7],[3.9,3.9,3.9,3.9,3.9,3.9,2.0],[4.9,4.9,4.9,4.9,4.9,4.9,3.6,1.0],[6.1,6.1,6.1,6.1,6.1,6.1,4.0,1.4,0.7],[9.7,9.7,9.7,9.7,9.7,9.7,6.4,3.8,3.0,2.3],[9.9,9.9,9.9,9.9,9.9,9.9,6.6,4.0,3.2,2.5,0.4],[12.6,12.6,12.6,12.6,12.6,12.6,10.1,6.7,5.1,4.3,1.9,1.5],[13.4,13.4,13.4,13.4,13.4,13.4,10.6,7.8,7.1,5.1,2.8,2.5,0.8],[17.4,17.4,17.4,17.4,17.4,17.4,13.8,11.2,10.5,9.1,5.8,5.1,3.6,2.3],[17.6,17.6,17.6,17.6,17.6,17.6,14.0,11.4,10.7,9.3,6.1,5.4,3.8,2.9,1.0],[20.5,20.5,20.5,20.5,20.5,20.5,17.1,14.0,13.3,12.0,9.6,8.4,6.8,5.2,2.5,1.7],[23.1,23.1,23.1,23.1,23.1,23.1,19.4,16.6,15.9,14.5,11.3,11.0,8.8,7.2,3.4,3.2,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],[23.1,23.1,23.1,23.1,23.1,23.1,19.4,16.6,15.9,14.5,11.3,11.0,8.8,7.2,3.4,3.2,null,null,1.1],[12.8,12.8,12.8,12.8,12.8,12.8,10.0,7.1,5.1,4.1,2.5,1.8,3.2,4.0,8.0,8.2,10.4,12.5,null,12.5],[17.3,17.3,17.3,17.3,17.3,17.3,13.7,11.1,9.5,8.8,6.1,5.0,7.3,8.5,11.9,12.1,14.8,17.2,null,17.2,2.7],[17.7,17.7,17.7,17.7,17.7,17.7,14.0,11.4,9.8,9.2,6.4,5.4,7.8,8.8,12.2,12.4,15.2,17.5,null,17.5,3.5,0.7],[20.9,20.9,20.9,20.9,20.9,20.9,17.9,15.2,12.8,12.3,9.9,9.2,10.9,11.9,14.4,14.6,17.7,19.8,null,19.8,6.2,2.5,1.8],[21.5,21.5,21.5,21.5,21.5,21.5,18.5,15.6,13.6,12.9,11.1,10.4,11.5,12.8,15.9,16.1,18.7,21.3,null,21.3,7.3,4.0,3.1,1.3],[24.2,24.2,24.2,24.2,24.2,24.2,20.9,18.3,16.5,15.8,13.5,12.6,14.2,14.9,18.4,18.6,21.3,23.8,null,23.8,9.8,6.0,5.5,3.5,2.3],[24.5,24.5,24.5,24.5,24.5,24.5,21.5,18.7,16.9,16.2,13.9,13.5,15.0,16.0,18.9,19.1,22.2,24.3,null,24.3,10.7,7.9,6.9,4.6,3.4,0.9],[24.9,24.9,24.9,24.9,24.9,24.9,21.8,18.9,17.6,16.7,14.9,14.5,15.6,16.3,19.8,20.0,22.5,24.6,null,24.6,11.7,8.9,8.3,6.2,5.1,3.0,1.8],[25.4,25.4,25.4,25.4,25.4,25.4,22.2,19.1,18.0,17.0,15.2,14.9,16.1,16.8,20.1,20.3,22.8,24.8,null,24.8,12.7,10.1,8.6,7.5,6.1,4.7,3.8,1.1],[25.4,25.4,25.4,25.4,25.4,25.4,22.2,19.1,18.0,17.0,15.2,14.9,16.1,16.8,20.1,20.3,22.8,24.8,null,24.8,12.7,10.1,8.6,7.5,6.1,4.7,3.8,1.1,null],[25.4,25.4,25.4,25.4,25.4,25.4,22.2,19.1,18.0,17.0,15.2,14.9,16.1,16.8,20.1,20.3,22.8,24.8,null,24.8,12.7,10.1,8.6,7.5,6.1,4.7,3.8,1.1,null,null],[24.8,24.8,24.8,24.8,24.8,24.8,21.7,18.6,17.0,16.1,14.1,13.4,15.2,16.0,19.0,19.2,22.3,24.4,null,24.4,10.4,7.2,6.6,4.8,3.5,1.0,1.0,3.1,4.8,4.8,4.8],[27.6,27.6,27.6,27.6,27.6,27.6,24.2,21.7,20.0,19.1,16.7,16.1,17.1,18.2,21.9,22.1,24.6,27.3,null,27.3,13.1,9.7,9.3,6.3,4.8,2.0,2.4,4.5,6.2,6.2,6.2,1.3],[27.6,27.6,27.6,27.6,27.6,27.6,24.2,21.7,20.0,19.1,16.7,16.1,17.1,18.2,21.9,22.1,24.6,27.3,null,27.3,13.1,9.7,9.3,6.3,4.8,2.0,2.4,4.5,6.2,6.2,6.2,1.3,null],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,null],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0,0.0,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0,0.0,0.0,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0,0.0,0.0,0.0,0.0],[28.2,28.2,28.2,28.2,28.2,28.2,24.8,22.3,20.6,19.7,17.3,16.7,17.7,18.8,22.5,22.7,25.2,27.9,null,27.9,13.7,10.3,9.9,6.9,5.4,2.4,2.8,5.1,6.8,6.8,6.8,1.7,null,0.0,null,0.0,0.0,0.0,0.0,0.0,0.0,null]]}],"c5":[]};
+
+const normN = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\(.*?\)/g, " ").replace(/\bst\b/g, "saint").replace(/[^a-z0-9]+/g, " ").trim();
+
+function tollPrice(net, i, j) {
+  if (i === j) return 0;
+  const a = Math.max(i, j), b = Math.min(i, j), row = net.m[a - 1];
+  const v = row ? row[b] : null;
+  return v == null ? null : v;
+}
+
+function matchStation(net, j) {
+  if (!net._n) net._n = net.st.map(x => normN(x.n));
+  const names = net._n, on = normN(j.name);
+  const ok = i => !names[i].startsWith("peage") && !names[i].startsWith("frontiere");
+  if (on) {
+    const ex = names.map((n, i) => n === on && ok(i) ? i : -1).filter(i => i >= 0);
+    if (ex.length === 1) return ex[0];
+    if (ex.length > 1) return -1;
+    const ct = names.map((n, i) => ok(i) && ((on.length >= 5 && n.includes(on)) || (n.length >= 5 && on.includes(n))) ? i : -1).filter(i => i >= 0);
+    return ct.length === 1 ? ct[0] : -1;
+  }
+  if (j.ref) {
+    const rf = net.st.map((x, i) => x.r === j.ref && ok(i) ? i : -1).filter(i => i >= 0);
+    if (rf.length === 1) return rf[0];
+  }
+  return -1;
+}
+
+function longestMono(h) {
+  let best = [];
+  for (const dir of [1, -1]) {
+    const L = h.map(() => 1), P = h.map(() => -1);
+    for (let i = 0; i < h.length; i++) for (let k = 0; k < i; k++)
+      if (h[i].idx > h[k].idx && (h[i].si - h[k].si) * dir > 0 && L[k] + 1 > L[i]) { L[i] = L[k] + 1; P[i] = k; }
+    let m = -1; for (let i = 0; i < h.length; i++) if (m < 0 || L[i] > L[m]) m = i;
+    const seq = []; for (let i = m; i >= 0; i = P[i]) seq.unshift(h[i]);
+    if (seq.length > best.length) best = seq;
+  }
+  return best;
+}
+
+/* Coût péage par arête de l'itinéraire : grilles officielles quand les sorties sont reconnues,
+   tarif calé (prix saisi) ou par défaut ailleurs. */
+function tollModel(main, juncs, inp) {
+  const n = main.coords.length, E = Math.max(0, n - 1);
+  const len = k => main.cumKm[k + 1] - main.cumKm[k];
+  const cost = new Float64Array(E), cov = new Uint8Array(E);
+  let matrixEur = 0, matrixKm = 0; const used = [];
+  const nets = (inp.vehicle === "moto" ? TOLLS.c5 : TOLLS.c1) || [];
+  for (const net of nets) {
+    const hits = [];
+    for (const j of juncs) { const si = matchStation(net, j); if (si >= 0) hits.push({ idx: j.idx, si }); }
+    hits.sort((a, b) => a.idx - b.idx);
+    const seq = longestMono(hits.filter((h, i) => i === 0 || h.idx !== hits[i - 1].idx));
+    if (seq.length < 2) continue;
+    const e0 = seq[0].si; let prevP = 0, prevIdx = seq[0].idx, any = false;
+    for (let t = 1; t < seq.length; t++) {
+      const h = seq[t], P = tollPrice(net, e0, h.si);
+      if (P == null || h.idx <= prevIdx) continue;
+      const dP = Math.max(0, P - prevP);
+      let km = 0;
+      for (let k = prevIdx; k < h.idx; k++) if (main.edgeToll[k] && !cov[k]) km += len(k);
+      if (km > 0.2) { for (let k = prevIdx; k < h.idx; k++) if (main.edgeToll[k] && !cov[k]) { cost[k] = dP * len(k) / km; cov[k] = 1; } }
+      else if (dP > 0) { cost[h.idx - 1] += dP; }
+      matrixEur += dP; matrixKm += km; prevP = Math.max(prevP, P); prevIdx = h.idx; any = true;
+    }
+    if (any) used.push(net.id);
+  }
+  let uncKm = 0;
+  for (let k = 0; k < E; k++) if (main.edgeToll[k] && !cov[k]) uncKm += len(k);
+  let fb = inp.rate, calibrated = false;
+  if (inp.tollPrice > 0 && uncKm > 2) { fb = Math.max(0, Math.min(0.5, (inp.tollPrice - matrixEur) / uncKm)); calibrated = true; }
+  for (let k = 0; k < E; k++) if (main.edgeToll[k] && !cov[k]) cost[k] = len(k) * fb;
+  const cumEur = new Float64Array(n);
+  for (let k = 0; k < E; k++) cumEur[k + 1] = cumEur[k] + cost[k];
+  return { cumEur, total: cumEur[n - 1] || 0, fb, calibrated, matrixEur, matrixKm, uncKm, used };
+}
+
 /* ============================================================ géométrie */
 const rad = d => d * Math.PI / 180;
 function hav(p, q) {
@@ -442,22 +523,25 @@ async function compute(inp, api, progress) {
   progress(0.06, "Itinéraire le plus rapide…");
   const main = await api.route([orig, dest], false, true);
   const n = main.coords.length;
-  inp.rateCalibrated = inp.tollPrice > 0 && main.tollKm >= 1;
-  if (inp.rateCalibrated) inp.rate = inp.tollPrice / main.tollKm;
 
-  let options = [], labels = new Map(), juncCount = 0;
+  let options = [], labels = new Map(), juncCount = 0, juncList = [];
+  let tm = tollModel(main, [], inp);
   if (main.tollKm >= CFG.minToll) {
     progress(0.1, "Repérage des échangeurs…");
     let junc = new Map();
     try {
       const list = await api.junctions(bboxOf([main.coords], .02));
       const grid = buildGrid(main.coords);
-      for (const [p, lab] of list) {
-        const r = nearest(grid, p);
-        if (r && r.d <= 0.15 && !junc.has(r.idx)) junc.set(r.idx, lab);
+      for (const j of list) {
+        const r = nearest(grid, j.p);
+        if (r && r.d <= 0.15) {
+          if (!junc.has(r.idx)) junc.set(r.idx, j.label);
+          juncList.push({ idx: r.idx, name: j.name, ref: j.ref });
+        }
       }
     } catch (e) { /* on continue sans échangeurs */ }
     juncCount = junc.size;
+    tm = tollModel(main, juncList, inp);
     const c = buildCandidates(main, junc);
     labels = c.labels;
     let pairs = candidatePairs(main, c.idx, budgetS);
@@ -471,12 +555,12 @@ async function compute(inp, api, progress) {
       catch (e) { if (e.code === 401 || e.code === 403) throw e; continue; }
       const deltaS = alt.durationS - p.s;
       if (deltaS > budgetS) continue;
-      const tollSavedKm = Math.max(0, p.toll - alt.tollKm);
+      const tollEur = Math.max(0, (tm.cumEur[p.b] - tm.cumEur[p.a]) - alt.tollKm * tm.fb);
       const fuelDelta = (alt.distanceKm - p.km) * inp.conso / 100 * inp.fuelDefault;
-      const saving = tollSavedKm * inp.rate - fuelDelta;
+      const saving = tollEur - fuelDelta;
       if (saving < 1) continue;
       options.push({ a: p.a, b: p.b, aKm: main.cumKm[p.a], bKm: main.cumKm[p.b], deltaS, saving,
-        tollEur: tollSavedKm * inp.rate, fuelEur: fuelDelta, alt });
+        tollEur, fuelEur: fuelDelta, alt });
     }
   }
 
@@ -540,7 +624,7 @@ async function compute(inp, api, progress) {
   }
 
   progress(1, "Terminé");
-  return { orig, dest, origLab, destLab, main, options, labels, juncCount, best, inp, refPrice, autonomyKm, needFuel, fuelNote };
+  return { orig, dest, origLab, destLab, main, options, labels, juncCount, best, inp, refPrice, autonomyKm, needFuel, fuelNote, tm };
 }
 
 /* ============================================================ assemblage du trajet final */
@@ -710,7 +794,8 @@ function makeApi(key) {
       }
       return (res.elements || []).map(el => {
         const t = el.tags || {};
-        return [[el.lon, el.lat], (t.ref ? `sortie ${t.ref}` : "échangeur") + (t.name ? ` (${t.name})` : "")];
+        return { p: [el.lon, el.lat], name: t.name || "", ref: t.ref || "",
+          label: (t.ref ? `sortie ${t.ref}` : "échangeur") + (t.name ? ` (${t.name})` : "") };
       });
     },
     async stations(fuel, b) {
@@ -841,7 +926,8 @@ if (typeof document !== "undefined") {
     const { main, best, inp } = res;
     const asm = assemble(res);
     const detourS = best.chosen.reduce((s, o) => s + o.deltaS, 0) + (best.station ? best.station.detS : 0);
-    const tollBase = inp.rateCalibrated ? inp.tollPrice : main.tollKm * inp.rate;
+    const tm = res.tm;
+    const tollBase = tm.total;
     const tollSaved = best.chosen.reduce((s, o) => s + o.tollEur, 0);
     const fuelDetours = best.chosen.reduce((s, o) => s + o.fuelEur, 0);
     const total = tollSaved - fuelDetours + (best.station ? best.fuelGain : 0);
@@ -863,9 +949,12 @@ if (typeof document !== "undefined") {
     </div>`;
 
     const r3 = x => x.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-    h += inp.rateCalibrated
-      ? `<p class="hint">${inp.vehicle === "moto" ? "Moto" : "Voiture"} · tarif calé sur ton prix : ${r3(inp.rate)} €/km (${eur2(inp.tollPrice)} pour ${Math.round(main.tollKm)} km à péage).</p>`
-      : `<p class="hint">Péage estimé à ${r3(inp.rate)} €/km. Indique le prix du trajet tout autoroute pour un calcul plus juste.</p>`;
+    const parts = [];
+    if (tm.matrixKm > 0.5) parts.push(`grilles officielles ASF 2026 sur ${Math.round(tm.matrixKm)} km (${tm.used.join(", ")})`);
+    if (tm.uncKm > 2) parts.push(tm.calibrated
+      ? `tarif calé sur ton prix, ${r3(tm.fb)} €/km, sur les ${Math.round(tm.uncKm)} km restants`
+      : `tarif par défaut, ${r3(tm.fb)} €/km, sur ${Math.round(tm.uncKm)} km`);
+    h += `<p class="hint">${inp.vehicle === "moto" ? "Moto" : "Voiture"} · péage calculé avec ${parts.join(" et ") || "aucune donnée"}.${tm.uncKm > 2 && !tm.calibrated ? " Indique le prix du trajet tout autoroute pour un calcul plus juste." : ""}${inp.vehicle === "moto" ? " Grilles moto pas encore intégrées." : ""}</p>`;
 
     // étapes
     const steps = [];
