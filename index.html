@@ -258,6 +258,7 @@ ol.steps .det { color: var(--muted); font-size: 14px; }
       <label for="fuelDefault">Prix carburant si inconnu (€/L)</label>
       <input type="text" id="fuelDefault" inputmode="decimal" value="1.80" autocomplete="off">
       <button type="button" class="small-btn" id="clearCache">Vider le cache des trajets</button>
+      <button type="button" class="small-btn" id="testBtn">Tester la connexion</button>
     </div>
   </details>
 
@@ -734,15 +735,24 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 let lastOrs = 0;
 async function throttle() { const w = ORS_INTERVAL - (Date.now() - lastOrs); if (w > 0) await sleep(w); lastOrs = Date.now(); }
 
+function serviceName(url) {
+  if (url.includes("openrouteservice")) return url.includes("geocode") ? "OpenRouteService (adresses)" : "OpenRouteService (itinéraires)";
+  if (url.includes("overpass")) return "OpenStreetMap (échangeurs)";
+  if (url.includes("economie.gouv")) return "Prix des carburants";
+  return "Service";
+}
 async function http(url, opts = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
     let r;
     try { r = await fetch(url, opts); }
-    catch (e) { if (i < retries - 1) { await sleep(4000); continue; } throw new ApiError(0, "Pas de réseau ou service injoignable."); }
+    catch (e) {
+      if (i < retries - 1) { await sleep(i === 0 ? 3000 : 10000); continue; }
+      throw new ApiError(0, `${serviceName(url)} injoignable (${e && e.message ? e.message : "erreur réseau"}).`);
+    }
     if (r.ok) return r.json();
     const body = (await r.text()).slice(0, 300);
     if ([429, 500, 502, 503, 504].includes(r.status) && i < retries - 1) { await sleep(20000 * (i + 1)); continue; }
-    throw new ApiError(r.status, `HTTP ${r.status} : ${body}`);
+    throw new ApiError(r.status, `${serviceName(url)} : erreur ${r.status} ${body}`);
   }
 }
 
@@ -889,8 +899,41 @@ if (typeof document !== "undefined") {
 
   $("clearCache").addEventListener("click", async () => { await IDB.clear(); $("clearCache").textContent = "Cache vidé"; });
 
+  $("testBtn").addEventListener("click", async () => {
+    const key = $("key").value.trim();
+    const out = [];
+    const show = () => showMsg("<b>Test de connexion</b><br>" + out.join("<br>"));
+    const A = [-1.5155, 43.4832], B = [-1.4748, 43.4929];
+    const tests = [
+      ["Adresses (OpenRouteService)", () => fetch(`${ORS}/geocode/search?` + new URLSearchParams({ api_key: key, text: "Anglet", size: 1 }))],
+      ["Itinéraire (OpenRouteService)", () => fetch(`${ORS}/v2/directions/driving-car/geojson`, { method: "POST",
+        headers: { "Authorization": key, "Content-Type": "application/json", "Accept": "application/geo+json, application/json" },
+        body: JSON.stringify({ coordinates: [A, B], extra_info: ["tollways"], instructions: false }) })],
+      ["Itinéraire sans péage", () => fetch(`${ORS}/v2/directions/driving-car/geojson`, { method: "POST",
+        headers: { "Authorization": key, "Content-Type": "application/json", "Accept": "application/geo+json, application/json" },
+        body: JSON.stringify({ coordinates: [A, B], options: { avoid_features: ["tollways"] }, instructions: false }) })],
+      ["Échangeurs (OpenStreetMap)", () => fetch(OVERPASS, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent('[out:json][timeout:25];node["highway"="motorway_junction"](43.45,-1.55,43.52,-1.45);out 3;') })],
+      ["Prix carburants", () => fetch(FUEL_API + "?" + new URLSearchParams({ select: "id,ville", where: "in_bbox(geom, 43.45, -1.55, 43.52, -1.45)", limit: 3 }))]
+    ];
+    $("testBtn").disabled = true;
+    for (const [name, fn] of tests) {
+      out.push(`… ${name}`); show();
+      let line;
+      try {
+        const r = await fn();
+        const txt = (await r.text()).slice(0, 120).replace(/[<>&]/g, "");
+        line = r.ok ? `✓ ${name}` : `✗ ${name} : erreur ${r.status} ${txt}`;
+      } catch (e) { line = `✗ ${name} : bloqué (${e && e.message ? e.message : "réseau"})`; }
+      out[out.length - 1] = line; show();
+      await sleep(1700);
+    }
+    $("testBtn").disabled = false;
+  });
+
   function showMsg(t) { $("msgBox").innerHTML = t ? `<div class="msg">${t}</div>` : ""; }
-  function progress(f, t) { $("progBar").style.width = Math.round(f * 100) + "%"; $("progText").textContent = t; }
+  let lastStep = "";
+  function progress(f, t) { lastStep = t; $("progBar").style.width = Math.round(f * 100) + "%"; $("progText").textContent = t; }
 
   let map = null, wakeLock = null;
 
@@ -915,7 +958,7 @@ if (typeof document !== "undefined") {
       render(res);
     } catch (e) {
       if (e.code === 401 || e.code === 403) showMsg("Clé OpenRouteService refusée : vérifie-la dans les réglages.");
-      else showMsg(e.message || String(e));
+      else showMsg(`${e.message || String(e)}<br><span class="hint">Étape : ${lastStep || "démarrage"}. Tu peux lancer « Tester la connexion » dans les réglages.</span>`);
     } finally {
       $("goBtn").disabled = false; $("progress").style.display = "none";
       try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {}
