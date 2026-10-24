@@ -719,6 +719,7 @@ if (typeof document !== "undefined") {
     const el = $(f), v = store.get(f, null);
     if (v !== null) el.value = v;
     el.addEventListener("change", () => store.set(f, el.value));
+    el.addEventListener("input", () => store.set(f, el.value));
   }
   $("wantFuel").checked = store.get("wantFuel", "1") === "1";
   $("wantFuel").addEventListener("change", () => { store.set("wantFuel", $("wantFuel").checked ? "1" : "0"); syncUi(); });
@@ -757,6 +758,7 @@ if (typeof document !== "undefined") {
 
   $("goBtn").addEventListener("click", async () => {
     const key = $("key").value.trim();
+    for (const f of fields) store.set(f, $(f).value);
     showMsg("");
     if (!key) { $("settings").open = true; showMsg("Colle d’abord ta clé OpenRouteService dans les réglages."); return; }
     if (!$("from").value.trim() || !$("to").value.trim()) { showMsg("Renseigne le départ et l’arrivée."); return; }
